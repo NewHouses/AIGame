@@ -84,6 +84,7 @@ class Xogo extends Behaviour {
         this.axentePrincipal = axentePrincipal;
         this.xogadores = xogadores;
         parametros.setNumeroXogadores(xogadores.size());
+        parametros.setIteracionsCambioMatriz(0);
     }
 
     public void action() {
@@ -144,6 +145,8 @@ class Xogo extends Behaviour {
                 /* Xogamos todas as rondas entre os dous xogadores */
                 while (ronda != parametros.getNumeroDeRondas()) {
                     ronda++;
+                    System.out.println(parametros.getIteracionsCambioMatriz());
+                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) { float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz(); enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); }
                     xogarRonda(xogador1, xogador2);
                 }
 
@@ -177,9 +180,79 @@ class Xogo extends Behaviour {
                     num1 = num.nextInt(10);
                     num2 = num.nextInt(10);
                     this.matriz[i][j] =  num1 + "," + num2;
-                    this.matriz[j][i] =  this.matriz[i][j];
+                    this.matriz[j][i] =  num2 + "," + num1;
                 }
             }
+    }
+
+    /**
+     * Este metodo encargase de cambiar a matriz cumpridas as iteracions seleccionadas
+     * cun porcentaxe de cambio estabelecido inicialmente
+     */
+    private float cambiarMatriz() {
+        int tamanhoMatriz = parametros.getTamanhoMatriz();
+        float porcentaxeDeCambio = (float) parametros.getPorcentaxeDeCambio();
+        float porcentaxeCambiado = 0;
+        Random num = new Random();
+        int fila, columna;
+        int num1, num2;
+        String celda;
+        ArrayList<String> celdasCambiadas = new ArrayList<String>();
+
+        while(true)
+        {
+            // Eleximos ao azar unha fila e unha columna e gardamos a celda
+            fila = num.nextInt(tamanhoMatriz);
+            columna= num.nextInt(tamanhoMatriz);
+            celda = fila + "," + columna;
+
+            // Se a celda xa foi modificada volvemos ao principio
+            if(celdasCambiadas.contains(celda)) continue;
+            celdasCambiadas.add(celda);
+
+            /*
+            * Por regra de 3:
+            *
+            *                tamanhoMatriz²     ---- 100%
+            *           numeroCeldasModificadas ----  x%
+            *
+            *           x = (numeroCeldasModificadas * 100) / tamanhoMatriz²
+            *
+            */
+            if(fila==columna) {
+                porcentaxeCambiado += (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
+                // Se superamos a porcentaxe maxima saimos do while e restamos a porcentaxe da celda que non chegaamos a cambiar
+                if(porcentaxeCambiado > porcentaxeDeCambio){
+                    porcentaxeCambiado -= (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
+                    break;
+                }
+                this.matriz[fila][columna] = num.nextInt(10) + "," + num.nextInt(10);
+
+            }
+            if(fila<columna)
+            {
+                porcentaxeCambiado += (2 * 100) / (tamanhoMatriz * tamanhoMatriz);
+                if(porcentaxeCambiado > porcentaxeDeCambio) {
+                    // Comprobamos se cambiando unha celda ainda cumprese a porcentaxe
+                    porcentaxeCambiado -= (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
+                    if(porcentaxeCambiado > porcentaxeDeCambio) {
+                        porcentaxeCambiado -= (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
+                        break;
+                    }
+                        fila = num.nextInt(tamanhoMatriz);
+                        num1 = num.nextInt(10);
+                        num2 = num.nextInt(10);
+                        this.matriz[fila][fila] =  num1 + "," + num2;
+                        break;
+                }
+                num1 = num.nextInt(10);
+                num2 = num.nextInt(10);
+                this.matriz[fila][columna] =  num1 + "," + num2;
+                this.matriz[columna][fila] =  num2 + "," + num1;
+            }
+        }
+
+        return porcentaxeCambiado;
     }
 
     /**
@@ -311,6 +384,14 @@ class Xogo extends Behaviour {
         mensaxe.setContent("EndGame");
         axentePrincipal.send(mensaxe);
     }
+
+    private void enviarCambioMatriz(Xogador xogador1, Xogador xogador2, float porcentaxeMatrizCambiada) {
+        ACLMessage mensaxe = new ACLMessage(ACLMessage.INFORM);
+        mensaxe.addReceiver(xogador1.aid);
+        mensaxe.addReceiver(xogador2.aid);
+        mensaxe.setContent("Changed#" + porcentaxeMatrizCambiada);
+        axentePrincipal.send(mensaxe);
+    }
 }
 
 class Xogador {
@@ -350,8 +431,8 @@ class ParametrosDoXogo {
         N = 2;
         S = 3;
         R = 50;
-        I = 0;
-        P = 10;
+        I = 3;
+        P = 50;
     }
 
     public void setNumeroXogadores(int n) {
@@ -366,7 +447,7 @@ class ParametrosDoXogo {
         R = r;
     }
 
-    public void setNUmeroRondasPraCambiarMatriz(int i) {
+    public void setIteracionsCambioMatriz(int i) {
         I = i;
     }
 
@@ -384,5 +465,13 @@ class ParametrosDoXogo {
 
     public int getNumeroDeRondas() {
         return R;
+    }
+
+    public int getIteracionsCambioMatriz() { 
+        return I;
+    }
+
+    public int getPorcentaxeDeCambio() {
+        return P;
     }
 }
