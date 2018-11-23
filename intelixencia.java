@@ -148,33 +148,30 @@ public class intelixencia extends Agent
 				System.out.println(getLocalName() + " --> Elixindo fila ou columna...");
 				Random rand = new Random();
 				int eleccion = rand.nextInt(numeroFilas);
+				int[] vector = new int[numeroFilas];
 
-				//Calculamos a fila ou columna a enviar polo metodo minimax
-				int[] minimax = new int[numeroFilas];
-				if (elexirFilas)
-				{
-					for (int fila = 0; fila < numeroFilas; fila++)
-						for (int columna = 0; columna < numeroFilas; columna++)
+				for (int fila = 0; fila < numeroFilas; fila++)
+					for (int columna = 0; columna < numeroFilas; columna++)
+					{
+						if (matriz[fila][columna] == Victoria)
 						{
-							if (matriz[fila][columna] == Victoria)
-							{
-								if (elexirFilas) minimax[fila]++;
-								else minimax[columna]++;
-							}
-							if (matriz[fila][columna] == Derrota)
-							{
-								if (elexirFilas) minimax[fila]--;
-								else minimax[columna]--;
-							}
+							if (elexirFilas) vector[fila]++;
+							else vector[columna]++;
 						}
-				}
+						if (matriz[fila][columna] == Derrota)
+						{
+							if (elexirFilas) vector[fila]--;
+							else vector[columna]--;
+						}
+					}
+			
 
 				//Eliximos a opcion con mais positivos
-				int maximo = minimax[0];
-				for (int i = 0; i < minimax.length; i++)
-					if (minimax[i] > maximo)
+				int maximo = vector[0];
+				for (int i = 0; i < vector.length; i++)
+					if (vector[i] > maximo)
 					{
-						maximo = minimax[i];
+						maximo = vector[i];
 						eleccion = i;
 					}
 
