@@ -11,12 +11,15 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class MainAgent extends Agent {
+    Xanela minhaXanela = new Xanela(this);
 
     /**
      * Este metodo executase cada vez que o axente executase
      */
     public void setup() {
         System.out.println(getLocalName() + " --> Lanzando...");
+
+        this.minhaXanela.setVisible(true);
 
         Scanner teclado = new Scanner(System.in);
         System.out.println("Prema calquera boton para empezar");
@@ -261,19 +264,27 @@ class Xogo extends Behaviour {
     private void imprimirMatriz() {
         int tamanhoMatriz = parametros.getTamanhoMatriz();
         String matrizPraImprimir = new String();
+        String separacion = "---------";
 
         for(int i=0; i< tamanhoMatriz; i++) {
 
-            matrizPraImprimir = matrizPraImprimir + " \n -----------------------------\n |";
+            matrizPraImprimir = matrizPraImprimir + " \n ";
+            for(int k = 0; k < tamanhoMatriz; k++)  matrizPraImprimir = matrizPraImprimir + separacion;
+                matrizPraImprimir = matrizPraImprimir + "\n |";
+            
             for(int j = 0; j< tamanhoMatriz; j++)
             {
                 matrizPraImprimir = matrizPraImprimir + "(" + matriz[i][j] + ") | ";
             }
         }
-        matrizPraImprimir = matrizPraImprimir + " \n -----------------------------\n";
+
+        matrizPraImprimir = matrizPraImprimir + " \n ";
+        for(int k = 0; k < tamanhoMatriz; k++)  matrizPraImprimir = matrizPraImprimir + separacion;
+        matrizPraImprimir = matrizPraImprimir + "\n";
 
 
-        System.out.println(matrizPraImprimir); // Imprimimos a matriz por consola
+        // System.out.println(matrizPraImprimir); // Imprimimos a matriz por consola
+        this.axentePrincipal.minhaXanela.imprimirMatriz(matrizPraImprimir);
     }
 
     /**
@@ -429,7 +440,7 @@ class ParametrosDoXogo {
 
     public ParametrosDoXogo() {
         N = 2;
-        S = 3;
+        S = 4;
         R = 50;
         I = 3;
         P = 50;
