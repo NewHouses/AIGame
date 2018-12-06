@@ -21,14 +21,6 @@ public class MainAgent extends Agent {
 
         this.minhaXanela.setVisible(true);
 
-        Scanner teclado = new Scanner(System.in);
-        System.out.println("Prema calquera boton para empezar");
-        teclado.nextLine(); //Pusen isto para que aos axente lles de tempo de arrancar antes de inciar a busqueda
-
-        ArrayList<Xogador> xogadores = buscarAxentes();
-
-        Xogo meuXogo = new Xogo(this, xogadores);
-        addBehaviour(meuXogo); // Engadimos o comportamento do noso axente principal
     }
 
     /**
@@ -44,7 +36,7 @@ public class MainAgent extends Agent {
     public ArrayList<Xogador> buscarAxentes() {
         ArrayList<Xogador> meusXogadores = new ArrayList<Xogador>();
 
-        System.out.println(getLocalName() + " --> Bucando axentes");
+        this.minhaXanela.imprimirInformacion(getLocalName() + " --> Bucando axentes" + "\n");
 
         /* Obtemos a descripcion dos Axentes Xogadores */
         DFAgentDescription descripcionDoAxente = new DFAgentDescription();
@@ -55,13 +47,13 @@ public class MainAgent extends Agent {
         /* Buscamos os axentes xogadores */
         try {
             DFAgentDescription[] xogadores = DFService.search(this, descripcionDoAxente);
-            System.out.println("\nAtopados " + xogadores.length + " xogadores.");
+            this.minhaXanela.imprimirInformacion("Atopados " + xogadores.length + " xogadores." + "\n" + "\n");
 
             /* Imprimimos por terminal os xogadores atopados */
             for(int i = 0; i < xogadores.length; i++) {
                 Xogador xogador = new Xogador(xogadores[i].getName(), i); // Creamos un xogador e asignamoslle un ID
                 meusXogadores.add(xogador);
-                System.out.println("\n\n" + i + " --> Xogador " + xogador.aid.getLocalName());
+                this.minhaXanela.imprimirInformacion(i + " --> Xogador " + xogador.aid.getLocalName() + "\n" + "\n");
             }
 
         } catch (FIPAException erro) {
@@ -69,6 +61,21 @@ public class MainAgent extends Agent {
         }
 
         return meusXogadores;
+    }
+
+    public void iniciarXogo() {
+        ArrayList<Xogador> xogadores = buscarAxentes();
+
+        if(xogadores.size() < 2)
+        {
+
+            this.minhaXanela.imprimirInformacion("ERRO: Non se pode inicalizar un xogo con menos de dous xogadores!!!" + "\n");
+        }
+        else
+        {
+            Xogo meuXogo = new Xogo(this, xogadores);
+            addBehaviour(meuXogo); // Engadimos o comportamento do noso axente principal
+        }
     }
 
 }
@@ -87,12 +94,12 @@ class Xogo extends Behaviour {
         this.axentePrincipal = axentePrincipal;
         this.xogadores = xogadores;
         parametros.setNumeroXogadores(xogadores.size());
-        parametros.setIteracionsCambioMatriz(0);
+      //  parametros.setIteracionsCambioMatriz(0);
     }
 
     public void action() {
 
-        System.out.println("\n\n\nIniciando nova partida\n\n\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n\nIniciando nova partida\n\n\n");
         enviarInformacionAosAxentes(); // Enviamos a informacion aos axentes xogadores
         xogar();
 
@@ -108,7 +115,7 @@ class Xogo extends Behaviour {
     private void enviarInformacionAosAxentes() {
 
         for (Xogador xogador : this.xogadores) {
-            System.out.println("\n Enviando informacion ao xogador " + xogador.aid.getLocalName());
+            this.axentePrincipal.minhaXanela.imprimirInformacion("Enviando informacion ao xogador " + xogador.aid.getLocalName() + "\n");
             ACLMessage mensaxe = new ACLMessage(ACLMessage.INFORM);
             mensaxe.setContent("Id#"
                     + xogador.id
@@ -120,6 +127,7 @@ class Xogo extends Behaviour {
             mensaxe.addReceiver(xogador.aid);
             myAgent.send(mensaxe);
         }
+         this.axentePrincipal.minhaXanela.imprimirInformacion("\n");
     }
 
     /**
@@ -148,8 +156,11 @@ class Xogo extends Behaviour {
                 /* Xogamos todas as rondas entre os dous xogadores */
                 while (ronda != parametros.getNumeroDeRondas()) {
                     ronda++;
-                    System.out.println(parametros.getIteracionsCambioMatriz());
-                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) { float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz(); enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); }
+                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) {
+                     float porcentaxeMatrizCambiada = cambiarMatriz(); 
+                     imprimirMatriz(); 
+                     enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); 
+                 }
                     xogarRonda(xogador1, xogador2);
                 }
 
@@ -159,9 +170,9 @@ class Xogo extends Behaviour {
             }
         }
 
-        System.out.println("\n\n*****************************");
-        System.out.println("*           CAMPEON         *");
-        System.out.println("*****************************");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n*****************************" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("*           CAMPEON         *" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("*****************************" + "\n");
     }
 
     /**
@@ -214,14 +225,14 @@ class Xogo extends Behaviour {
             celdasCambiadas.add(celda);
 
             /*
-            * Por regra de 3:
-            *
-            *                tamanhoMatriz²     ---- 100%
-            *           numeroCeldasModificadas ----  x%
-            *
-            *           x = (numeroCeldasModificadas * 100) / tamanhoMatriz²
-            *
-            */
+             * Por regra de 3:
+             *
+             *                tamanhoMatriz²     ---- 100%
+             *           numeroCeldasModificadas ----  x%
+             *
+             *           x = (numeroCeldasModificadas * 100) / tamanhoMatriz²
+             *
+             */
             if(fila==columna) {
                 porcentaxeCambiado += (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
                 // Se superamos a porcentaxe maxima saimos do while e restamos a porcentaxe da celda que non chegaamos a cambiar
@@ -242,11 +253,11 @@ class Xogo extends Behaviour {
                         porcentaxeCambiado -= (1 * 100) / (tamanhoMatriz * tamanhoMatriz);
                         break;
                     }
-                        fila = num.nextInt(tamanhoMatriz);
-                        num1 = num.nextInt(10);
-                        num2 = num.nextInt(10);
-                        this.matriz[fila][fila] =  num1 + "," + num2;
-                        break;
+                    fila = num.nextInt(tamanhoMatriz);
+                    num1 = num.nextInt(10);
+                    num2 = num.nextInt(10);
+                    this.matriz[fila][fila] =  num1 + "," + num2;
+                    break;
                 }
                 num1 = num.nextInt(10);
                 num2 = num.nextInt(10);
@@ -270,8 +281,8 @@ class Xogo extends Behaviour {
 
             matrizPraImprimir = matrizPraImprimir + " \n ";
             for(int k = 0; k < tamanhoMatriz; k++)  matrizPraImprimir = matrizPraImprimir + separacion;
-                matrizPraImprimir = matrizPraImprimir + "\n |";
-            
+            matrizPraImprimir = matrizPraImprimir + "\n |";
+
             for(int j = 0; j< tamanhoMatriz; j++)
             {
                 matrizPraImprimir = matrizPraImprimir + "(" + matriz[i][j] + ") | ";
@@ -309,11 +320,11 @@ class Xogo extends Behaviour {
 
         /* Obtemos a fila elexida polo xogador 1 */
         fila = obterPosicion(xogador1);
-        System.out.println("O xogador " + xogador1.aid.getLocalName() + " elexiu a fila " + fila);
+        this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " elexiu a fila " + fila + "\n");
 
         /* Obtemos a columna elexida polo xogador 2 */
         columna = obterPosicion(xogador2);
-        System.out.println("O xogador " + xogador2.aid.getLocalName() + " elexiu a columna " + columna);
+        this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " elexiu a columna " + columna + "\n");
 
         /* Obtemos o resultado e o enviamos */
         resultado = obterResultado(fila, columna);
@@ -365,17 +376,17 @@ class Xogo extends Behaviour {
     private void definirGanhador(Xogador xogador1, Xogador xogador2) {
 
         if (xogador1.marcador > xogador2.marcador) {
-            System.out.println("\nO xogador " + xogador1.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador1.marcador + " puntos");
-            System.out.println("O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador1.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador1.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos" + "\n\n");
             xogador1.Victorias++;
             xogador2.Derrotas++;
         } else if (xogador2.marcador > xogador1.marcador) {
-            System.out.println("\nO xogador " + xogador2.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador2.marcador + " puntos");
-            System.out.println("O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador2.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador2.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos" + "\n\n");
             xogador1.Derrotas++;
             xogador2.Victorias++;
         } else {
-            System.out.println("\nAmbos xogadores empatan coa cifra de " + xogador1.marcador + " puntos");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("\nAmbos xogadores empatan coa cifra de " + xogador1.marcador + " puntos" + "\n\n");
             xogador1.Empates++;
             xogador2.Empates++;
         }
@@ -397,6 +408,8 @@ class Xogo extends Behaviour {
     }
 
     private void enviarCambioMatriz(Xogador xogador1, Xogador xogador2, float porcentaxeMatrizCambiada) {
+        this.axentePrincipal.minhaXanela.imprimirInformacion("\nA matriz cambiou \n\n");
+           
         ACLMessage mensaxe = new ACLMessage(ACLMessage.INFORM);
         mensaxe.addReceiver(xogador1.aid);
         mensaxe.addReceiver(xogador2.aid);
@@ -478,7 +491,7 @@ class ParametrosDoXogo {
         return R;
     }
 
-    public int getIteracionsCambioMatriz() { 
+    public int getIteracionsCambioMatriz() {
         return I;
     }
 
