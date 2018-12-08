@@ -17,7 +17,9 @@ public class Xanela extends JFrame
     private JScrollPane scrollClasificacion = new JScrollPane(this.panelClasificacion);
 
     /* Botóns */
-    private JButton botonNovoXogo = new JButton("Novo xogo");
+    private JButton botonNovoXogo = new JButton("NOVO XOGO");
+    private JButton botonPuasa = new JButton("PAUSAR");
+    private JButton botonContinuar = new JButton("CONTINUAR");
 
     public Xanela(MainAgent meuAxente) {
         setTitle("Práctica B");
@@ -37,7 +39,10 @@ public class Xanela extends JFrame
         crearPanelMatriz();
         crearPanelInformacion();
         crearPanelClasificacion();
-        crarBotonNovoXogo();
+        crearBotonNovoXogo();
+        crearBotonPausa();
+        crearBotonContinuar();
+
     }
 
     public void crearMenu() {
@@ -92,8 +97,8 @@ public class Xanela extends JFrame
         this.panelClasificacion.setText(clasificacionPraImprimir);
     }
 
-    public void crarBotonNovoXogo() {
-        int x = 200;
+    public void crearBotonNovoXogo() {
+        int x = 400;
         int y = 810;
         int anchura = 400;
         int altura = 80;
@@ -101,6 +106,31 @@ public class Xanela extends JFrame
         add(this.botonNovoXogo);
         this.botonNovoXogo.addActionListener( (ActionEvent e) -> { // Engadimos a resposta do boton "Novo xogo"
             this.meuAxente.iniciarXogo();
+        });
+    }
+
+    public void crearBotonPausa() {
+        int x = 800;
+        int y = 810;
+        int anchura = 400;
+        int altura = 80;
+        this.botonPuasa.setBounds(x, y, anchura, altura);
+        add(this.botonPuasa);
+        this.botonPuasa.addActionListener( (ActionEvent e) -> { // Engadimos a resposta do boton "Novo xogo"
+            this.meuAxente.setPausar(true);
+        });
+    }
+
+
+    public void crearBotonContinuar() {
+        int x = 1200;
+        int y = 810;
+        int anchura = 400;
+        int altura = 80;
+        this.botonContinuar.setBounds(x, y, anchura, altura);
+        add(this.botonContinuar);
+        this.botonContinuar.addActionListener( (ActionEvent e) -> { // Engadimos a resposta do boton "Novo xogo"
+            this.meuAxente.setPausar(false);
         });
     }
 }

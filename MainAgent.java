@@ -6,12 +6,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class MainAgent extends Agent {
     Xanela minhaXanela = new Xanela(this);
+    private boolean pausar = false;
 
     /**
      * Este metodo executase cada vez que o axente executase
@@ -78,6 +77,13 @@ public class MainAgent extends Agent {
         }
     }
 
+    public void setPausar(boolean pausar) {
+        this.pausar = pausar;
+    }
+
+    public boolean isPausar() {
+        return pausar;
+    }
 }
 
 
@@ -89,12 +95,14 @@ class Xogo extends Behaviour {
     private ArrayList<Xogador> xogadores;
     private String[][] matriz;
     private ParametrosDoXogo parametros = new ParametrosDoXogo();
+    private TreeMap<Integer, Xogador> clasificacion;
+
 
     public Xogo(MainAgent axentePrincipal, ArrayList<Xogador> xogadores) {
         this.axentePrincipal = axentePrincipal;
         this.xogadores = xogadores;
         parametros.setNumeroXogadores(xogadores.size());
-      //  parametros.setIteracionsCambioMatriz(0);
+        parametros.setIteracionsCambioMatriz(0);
     }
 
     public void action() {
@@ -127,7 +135,6 @@ class Xogo extends Behaviour {
             mensaxe.addReceiver(xogador.aid);
             myAgent.send(mensaxe);
         }
-         this.axentePrincipal.minhaXanela.imprimirInformacion("\n");
     }
 
     /**
@@ -155,13 +162,26 @@ class Xogo extends Behaviour {
 
                 /* Xogamos todas as rondas entre os dous xogadores */
                 while (ronda != parametros.getNumeroDeRondas()) {
+                    while (this.axentePrincipal.isPausar()) {
+                                     try
+                    {
+                        Thread.sleep(500);
+                    }              catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    }
                     ronda++;
-                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) {
-                     float porcentaxeMatrizCambiada = cambiarMatriz(); 
-                     imprimirMatriz(); 
-                     enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); 
-                 }
+                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) { float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz(); enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); }
                     xogarRonda(xogador1, xogador2);
+                    try
+                    {
+                        Thread.sleep(500);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
 
                 definirGanhador(xogador1, xogador2);
@@ -170,9 +190,25 @@ class Xogo extends Behaviour {
             }
         }
 
+        actualizarPuntuacions();
+        actualizarClasificacion();
+
         this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n*****************************" + "\n");
         this.axentePrincipal.minhaXanela.imprimirInformacion("*           CAMPEON         *" + "\n");
         this.axentePrincipal.minhaXanela.imprimirInformacion("*****************************" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("                 " + clasificacion.get(1).aid.getLocalName() + "\n");
+
+        String clasificacionPraImprimir = "\n\n*************************************************************************************************" + "\n";
+        clasificacionPraImprimir += "                                                     Clasificación           " + "\n";
+        clasificacionPraImprimir += "*************************************************************************************************" + "\n\n\n";
+        Iterator<Integer> it = clasificacion.keySet().iterator();
+        while (it.hasNext()) {
+            int posicion = it.next();
+            Xogador xogador = clasificacion.get(posicion);
+            clasificacionPraImprimir += " " + posicion  +"º " + xogador.aid.getLocalName() + " Victorias: " +  xogador.Victorias + " Empates: " + xogador.Empates + " Derrotas: " + xogador.Derrotas + "  Puntuacion: " + xogador.puntuacion + " Puntos Totais: " + xogador.marcadorTotal + "\n\n";
+        }
+
+        this.axentePrincipal.minhaXanela.imprimirClasificacion(clasificacionPraImprimir);
     }
 
     /**
@@ -318,6 +354,7 @@ class Xogo extends Behaviour {
         String[] resultadoAux;
         int resultado1, resultado2;
 
+
         /* Obtemos a fila elexida polo xogador 1 */
         fila = obterPosicion(xogador1);
         this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " elexiu a fila " + fila + "\n");
@@ -328,6 +365,8 @@ class Xogo extends Behaviour {
 
         /* Obtemos o resultado e o enviamos */
         resultado = obterResultado(fila, columna);
+
+
         enviarResultado(resultado, xogador1, xogador2, fila, columna);
 
         resultadoAux = resultado.split(",");
@@ -377,19 +416,22 @@ class Xogo extends Behaviour {
 
         if (xogador1.marcador > xogador2.marcador) {
             this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador1.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador1.marcador + " puntos" + "\n");
-            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos" + "\n\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos" + "\n");
             xogador1.Victorias++;
             xogador2.Derrotas++;
         } else if (xogador2.marcador > xogador1.marcador) {
             this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador2.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador2.marcador + " puntos" + "\n");
-            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos" + "\n\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos" + "\n");
             xogador1.Derrotas++;
             xogador2.Victorias++;
         } else {
-            this.axentePrincipal.minhaXanela.imprimirInformacion("\nAmbos xogadores empatan coa cifra de " + xogador1.marcador + " puntos" + "\n\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("Ambos xogadores empatan coa cifra de " + xogador1.marcador + " puntos" + "\n");
             xogador1.Empates++;
             xogador2.Empates++;
         }
+
+        xogador1.marcadorTotal += xogador1.marcador;
+        xogador2.marcadorTotal += xogador2.marcador;
 
         /* Reinicializamos os marcadores dos xogadores */
         xogador1.marcador = 0;
@@ -408,13 +450,65 @@ class Xogo extends Behaviour {
     }
 
     private void enviarCambioMatriz(Xogador xogador1, Xogador xogador2, float porcentaxeMatrizCambiada) {
-        this.axentePrincipal.minhaXanela.imprimirInformacion("\nA matriz cambiou \n\n");
-           
         ACLMessage mensaxe = new ACLMessage(ACLMessage.INFORM);
         mensaxe.addReceiver(xogador1.aid);
         mensaxe.addReceiver(xogador2.aid);
         mensaxe.setContent("Changed#" + porcentaxeMatrizCambiada);
         axentePrincipal.send(mensaxe);
+    }
+
+    private void  actualizarPuntuacions() {
+        for (int numXogador = 0; numXogador < xogadores.size(); numXogador++) xogadores.get(numXogador).actualizarPuntuacion();
+    }
+
+    private void actualizarClasificacion() {
+        ArrayList<Integer> puntuacions = new ArrayList<Integer>();
+        ArrayList<Xogador> clasificacion = new ArrayList<Xogador>();
+        ArrayList<Xogador> clasificacionAux = new ArrayList<Xogador>();
+
+        this.clasificacion = new TreeMap<Integer, Xogador>();
+        for (int numXogador = 0; numXogador < xogadores.size(); numXogador++)
+            puntuacions.add(xogadores.get(numXogador).puntuacion);
+        Collections.sort(puntuacions);
+        Collections.reverse(puntuacions);
+
+        /* Ordeamos por puntos acadados */
+        for (int posicion = 0; posicion < puntuacions.size(); posicion++)
+            for (int numXogador = 0; numXogador < xogadores.size(); numXogador++)
+                if (puntuacions.get(posicion) == xogadores.get(numXogador).puntuacion) {
+                    if(!estaXogadorNaClasificacion(xogadores.get(numXogador))) {
+                        clasificacion.add(xogadores.get(numXogador));
+                        clasificacionAux.add(xogadores.get(numXogador));
+                          this.clasificacion.put(posicion + 1, xogadores.get(numXogador));
+                        break;
+                    }
+                }
+
+        this.clasificacion = new TreeMap<Integer, Xogador>();
+
+        /* Ordeamos as posicións en caso de empate a puntos según o marcador total */
+        for (int posicion1 = 0; posicion1 < clasificacion.size(); posicion1++){
+            for (int posicion2 = posicion1 + 1; posicion2 < clasificacion.size(); posicion2++)
+                if (clasificacion.get(posicion1).puntuacion == clasificacion.get(posicion2).puntuacion) {
+                    if(clasificacion.get(posicion1).marcadorTotal < clasificacion.get(posicion2).marcadorTotal) {
+                        clasificacion.set(posicion2, clasificacionAux.get(posicion1));
+                        clasificacion.set(posicion1, clasificacionAux.get(posicion2));
+                        clasificacionAux.set(posicion2, clasificacion.get(posicion2));
+                        clasificacionAux.set(posicion1, clasificacion.get(posicion1));
+                    }
+                }
+
+        }
+
+        for (int posicion = 1; posicion <= clasificacion.size(); posicion++) this.clasificacion.put(posicion, clasificacion.get(posicion-1));
+
+    }
+
+    private boolean estaXogadorNaClasificacion(Xogador xogador) {
+        if(this.clasificacion.isEmpty()) return false;
+        Iterator<Integer> it = clasificacion.keySet().iterator();
+        while (it.hasNext()) if(xogador.aid.equals(clasificacion.get(it.next()).aid)) return true;
+        return false;
     }
 }
 
@@ -422,6 +516,7 @@ class Xogador {
     AID aid;
     int id;
     int marcador = 0;
+    int marcadorTotal = 0;
     int Victorias = 0;
     int Empates = 0;
     int Derrotas = 0;
@@ -440,6 +535,7 @@ class Xogador {
     public boolean equals(Object o) {
         return this.aid.equals(o);
     }
+
 }
 
 
