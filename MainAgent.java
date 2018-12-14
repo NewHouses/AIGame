@@ -11,6 +11,8 @@ import java.util.*;
 public class MainAgent extends Agent {
     Xanela minhaXanela = new Xanela(this);
     private boolean pausar = false;
+    private boolean verboseMode = false;
+    private int velocidade = 0;
 
     /**
      * Este metodo executase cada vez que o axente executase
@@ -35,7 +37,7 @@ public class MainAgent extends Agent {
     public ArrayList<Xogador> buscarAxentes() {
         ArrayList<Xogador> meusXogadores = new ArrayList<Xogador>();
 
-        this.minhaXanela.imprimirInformacion(getLocalName() + " --> Bucando axentes" + "\n");
+        this.minhaXanela.imprimirInformacion("   " + getLocalName() + " --> Bucando axentes" + "\n");
 
         /* Obtemos a descripcion dos Axentes Xogadores */
         DFAgentDescription descripcionDoAxente = new DFAgentDescription();
@@ -46,13 +48,13 @@ public class MainAgent extends Agent {
         /* Buscamos os axentes xogadores */
         try {
             DFAgentDescription[] xogadores = DFService.search(this, descripcionDoAxente);
-            this.minhaXanela.imprimirInformacion("Atopados " + xogadores.length + " xogadores." + "\n" + "\n");
+            this.minhaXanela.imprimirInformacion("   Atopados " + xogadores.length + " xogadores." + "\n" + "\n");
 
             /* Imprimimos por terminal os xogadores atopados */
             for(int i = 0; i < xogadores.length; i++) {
                 Xogador xogador = new Xogador(xogadores[i].getName(), i); // Creamos un xogador e asignamoslle un ID
                 meusXogadores.add(xogador);
-                this.minhaXanela.imprimirInformacion(i + " --> Xogador " + xogador.aid.getLocalName() + "\n" + "\n");
+                this.minhaXanela.imprimirInformacion("   " + i + " --> Xogador " + xogador.aid.getLocalName() + "\n" + "\n");
             }
 
         } catch (FIPAException erro) {
@@ -62,13 +64,12 @@ public class MainAgent extends Agent {
         return meusXogadores;
     }
 
-    public void iniciarXogo() {
-        ArrayList<Xogador> xogadores = buscarAxentes();
+    public void iniciarXogo( ArrayList<Xogador> xogadores) {
 
         if(xogadores.size() < 2)
         {
 
-            this.minhaXanela.imprimirInformacion("ERRO: Non se pode inicalizar un xogo con menos de dous xogadores!!!" + "\n");
+            this.minhaXanela.imprimirInformacion("   ERRO: Non se pode inicalizar un xogo con menos de dous xogadores!!!" + "\n");
         }
         else
         {
@@ -83,6 +84,18 @@ public class MainAgent extends Agent {
 
     public boolean isPausar() {
         return pausar;
+    }
+
+    public void setVerboseMode(boolean verboseMode) { this.verboseMode = verboseMode; }
+
+    public boolean isVerboseMode() { return verboseMode;}
+
+    public void setVelocidade(int velocidade) {
+        this.velocidade = velocidade;
+    }
+
+    public int getVelocidade() {
+        return this.velocidade;
     }
 }
 
@@ -107,7 +120,7 @@ class Xogo extends Behaviour {
 
     public void action() {
 
-        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n\nIniciando nova partida\n\n\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n\n   Iniciando nova partida\n\n\n");
         enviarInformacionAosAxentes(); // Enviamos a informacion aos axentes xogadores
         xogar();
 
@@ -123,7 +136,7 @@ class Xogo extends Behaviour {
     private void enviarInformacionAosAxentes() {
 
         for (Xogador xogador : this.xogadores) {
-            this.axentePrincipal.minhaXanela.imprimirInformacion("Enviando informacion ao xogador " + xogador.aid.getLocalName() + "\n");
+            if (this.axentePrincipal.isVerboseMode()) this.axentePrincipal.minhaXanela.imprimirInformacion("   Enviando informacion ao xogador " + xogador.aid.getLocalName() + "\n");
             ACLMessage mensaxe = new ACLMessage(ACLMessage.INFORM);
             mensaxe.setContent("Id#"
                     + xogador.id
@@ -163,20 +176,25 @@ class Xogo extends Behaviour {
                 /* Xogamos todas as rondas entre os dous xogadores */
                 while (ronda != parametros.getNumeroDeRondas()) {
                     while (this.axentePrincipal.isPausar()) {
-                                     try
-                    {
-                        Thread.sleep(500);
-                    }              catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
+                        try
+                        {
+                            Thread.sleep(500);
+                        }              catch (InterruptedException e)
+                        {
+                            e.printStackTrace();
+                        }
                     }
                     ronda++;
-                    if(parametros.getIteracionsCambioMatriz() > 0) if((ronda % parametros.getIteracionsCambioMatriz()) == 0) { float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz(); enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada); }
+                    if(parametros.getIteracionsCambioMatriz() > 0)
+                        if((ronda % parametros.getIteracionsCambioMatriz()) == 0) {
+                            float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz();
+                            enviarCambioMatriz(xogador1, xogador2, porcentaxeMatrizCambiada);
+                            if (this.axentePrincipal.isVerboseMode()) this.axentePrincipal.minhaXanela.imprimirInformacion("   A matriz cambiou un " + porcentaxeMatrizCambiada + "%\n");
+                        }
                     xogarRonda(xogador1, xogador2);
                     try
                     {
-                        Thread.sleep(500);
+                        Thread.sleep(this.axentePrincipal.getVelocidade());
                     }
                     catch (InterruptedException e)
                     {
@@ -193,13 +211,13 @@ class Xogo extends Behaviour {
         actualizarPuntuacions();
         actualizarClasificacion();
 
-        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n*****************************" + "\n");
-        this.axentePrincipal.minhaXanela.imprimirInformacion("*           CAMPEON         *" + "\n");
-        this.axentePrincipal.minhaXanela.imprimirInformacion("*****************************" + "\n");
-        this.axentePrincipal.minhaXanela.imprimirInformacion("                 " + clasificacion.get(1).aid.getLocalName() + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n   *****************************" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   *           CAMPEON         *" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   *****************************" + "\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("                       " + clasificacion.get(1).aid.getLocalName() + "\n");
 
         String clasificacionPraImprimir = "\n\n*************************************************************************************************" + "\n";
-        clasificacionPraImprimir += "                                                     Clasificación           " + "\n";
+        clasificacionPraImprimir += "                                                                   Clasificación           " + "\n";
         clasificacionPraImprimir += "*************************************************************************************************" + "\n\n\n";
         Iterator<Integer> it = clasificacion.keySet().iterator();
         while (it.hasNext()) {
@@ -357,15 +375,16 @@ class Xogo extends Behaviour {
 
         /* Obtemos a fila elexida polo xogador 1 */
         fila = obterPosicion(xogador1);
-        this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " elexiu a fila " + fila + "\n");
+        if (this.axentePrincipal.isVerboseMode()) this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador " + xogador1.aid.getLocalName() + " elexiu a fila " + fila + "\n");
 
         /* Obtemos a columna elexida polo xogador 2 */
         columna = obterPosicion(xogador2);
-        this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " elexiu a columna " + columna + "\n");
+        if (this.axentePrincipal.isVerboseMode()) this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador " + xogador2.aid.getLocalName() + " elexiu a columna " + columna + "\n");
 
         /* Obtemos o resultado e o enviamos */
         resultado = obterResultado(fila, columna);
 
+        if (this.axentePrincipal.isVerboseMode()) this.axentePrincipal.minhaXanela.imprimirInformacion("   A celda seleccionada contén " + resultado + "\n");
 
         enviarResultado(resultado, xogador1, xogador2, fila, columna);
 
@@ -373,9 +392,17 @@ class Xogo extends Behaviour {
         resultado1 = Integer.parseInt(resultadoAux[0]);
         resultado2 = Integer.parseInt(resultadoAux[1]);
 
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador1.aid.getLocalName() + " obtén " + resultado1 + "puntos\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador2.aid.getLocalName() + " obtén " + resultado2 + "puntos\n");
+
+
         /* Actualizamos as estadisticas dos xogadores */
         xogador1.marcador += resultado1;
         xogador2.marcador += resultado2;
+
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador1.aid.getLocalName() + " ten agora " + xogador1.marcador + "puntos\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador2.aid.getLocalName() + " ten agora " + xogador2.marcador + "puntos\n");
+
     }
 
     /**
@@ -415,17 +442,17 @@ class Xogo extends Behaviour {
     private void definirGanhador(Xogador xogador1, Xogador xogador2) {
 
         if (xogador1.marcador > xogador2.marcador) {
-            this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador1.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador1.marcador + " puntos" + "\n");
-            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("\n   O xogador " + xogador1.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador1.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador " + xogador2.aid.getLocalName() + " conseguiu " + xogador2.marcador + " puntos" + "\n");
             xogador1.Victorias++;
             xogador2.Derrotas++;
         } else if (xogador2.marcador > xogador1.marcador) {
-            this.axentePrincipal.minhaXanela.imprimirInformacion("\nO xogador " + xogador2.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador2.marcador + " puntos" + "\n");
-            this.axentePrincipal.minhaXanela.imprimirInformacion("O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("\n   O xogador " + xogador2.aid.getLocalName() + " acada a victoria coa incríbel cifra de " + xogador2.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador " + xogador1.aid.getLocalName() + " conseguiu " + xogador1.marcador + " puntos" + "\n");
             xogador1.Derrotas++;
             xogador2.Victorias++;
         } else {
-            this.axentePrincipal.minhaXanela.imprimirInformacion("Ambos xogadores empatan coa cifra de " + xogador1.marcador + " puntos" + "\n");
+            this.axentePrincipal.minhaXanela.imprimirInformacion("   Ambos xogadores empatan coa cifra de " + xogador1.marcador + " puntos" + "\n");
             xogador1.Empates++;
             xogador2.Empates++;
         }
@@ -479,7 +506,7 @@ class Xogo extends Behaviour {
                     if(!estaXogadorNaClasificacion(xogadores.get(numXogador))) {
                         clasificacion.add(xogadores.get(numXogador));
                         clasificacionAux.add(xogadores.get(numXogador));
-                          this.clasificacion.put(posicion + 1, xogadores.get(numXogador));
+                        this.clasificacion.put(posicion + 1, xogadores.get(numXogador));
                         break;
                     }
                 }
