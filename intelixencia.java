@@ -153,6 +153,7 @@ public class intelixencia extends Agent
 				for (int fila = 0; fila < numeroFilas; fila++)
 					for (int columna = 0; columna < numeroFilas; columna++)
 					{
+						System.out.println("Intelixencia: " + fila + " " + columna);
 						if (matriz[fila][columna] == Victoria)
 						{
 							if (elexirFilas) vector[fila]++;

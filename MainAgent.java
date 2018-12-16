@@ -115,7 +115,6 @@ class Xogo extends Behaviour {
         this.axentePrincipal = axentePrincipal;
         this.xogadores = xogadores;
         parametros.setNumeroXogadores(xogadores.size());
-        parametros.setIteracionsCambioMatriz(0);
     }
 
     public void action() {
@@ -170,7 +169,7 @@ class Xogo extends Behaviour {
 
                 xerarMatriz(); // Xeramos a matriz
                 imprimirMatriz(); //Imprimimos a matriz
-
+                imprimirClasificacion();
                 enviarNovoXogo(xogador1, xogador2); // Informamos a ambolos dous xogadores de que vaise iniciar unha nova partida entre eles dous
 
                 /* Xogamos todas as rondas entre os dous xogadores */
@@ -185,6 +184,9 @@ class Xogo extends Behaviour {
                         }
                     }
                     ronda++;
+                    this.axentePrincipal.minhaXanela.imprimirRonda(ronda, parametros.getNumeroDeRondas());
+                    this.axentePrincipal.minhaXanela.imprimirPorcentaxe(parametros.getPorcentaxeDeCambio());
+
                     if(parametros.getIteracionsCambioMatriz() > 0)
                         if((ronda % parametros.getIteracionsCambioMatriz()) == 0) {
                             float porcentaxeMatrizCambiada = cambiarMatriz(); imprimirMatriz();
@@ -208,13 +210,17 @@ class Xogo extends Behaviour {
             }
         }
 
-        actualizarPuntuacions();
-        actualizarClasificacion();
+        imprimirClasificacion();
 
         this.axentePrincipal.minhaXanela.imprimirInformacion("\n\n   *****************************" + "\n");
         this.axentePrincipal.minhaXanela.imprimirInformacion("   *           CAMPEON         *" + "\n");
         this.axentePrincipal.minhaXanela.imprimirInformacion("   *****************************" + "\n");
         this.axentePrincipal.minhaXanela.imprimirInformacion("                       " + clasificacion.get(1).aid.getLocalName() + "\n");
+    }
+
+    private void imprimirClasificacion() {
+        actualizarPuntuacions();
+        actualizarClasificacion();
 
         String clasificacionPraImprimir = "\n\n*************************************************************************************************" + "\n";
         clasificacionPraImprimir += "                                                                   Clasificación           " + "\n";
@@ -401,7 +407,7 @@ class Xogo extends Behaviour {
         xogador2.marcador += resultado2;
 
         this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador1.aid.getLocalName() + " ten agora " + xogador1.marcador + "puntos\n");
-        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador2.aid.getLocalName() + " ten agora " + xogador2.marcador + "puntos\n");
+        this.axentePrincipal.minhaXanela.imprimirInformacion("   O xogador  " + xogador2.aid.getLocalName() + " ten agora " + xogador2.marcador + "puntos\n\n");
 
     }
 
@@ -495,14 +501,14 @@ class Xogo extends Behaviour {
 
         this.clasificacion = new TreeMap<Integer, Xogador>();
         for (int numXogador = 0; numXogador < xogadores.size(); numXogador++)
-            puntuacions.add(xogadores.get(numXogador).puntuacion);
+            puntuacions.add(xogadores.get(numXogador).marcadorTotal);
         Collections.sort(puntuacions);
         Collections.reverse(puntuacions);
 
         /* Ordeamos por puntos acadados */
         for (int posicion = 0; posicion < puntuacions.size(); posicion++)
             for (int numXogador = 0; numXogador < xogadores.size(); numXogador++)
-                if (puntuacions.get(posicion) == xogadores.get(numXogador).puntuacion) {
+                if (puntuacions.get(posicion) == xogadores.get(numXogador).marcadorTotal) {
                     if(!estaXogadorNaClasificacion(xogadores.get(numXogador))) {
                         clasificacion.add(xogadores.get(numXogador));
                         clasificacionAux.add(xogadores.get(numXogador));
@@ -516,8 +522,8 @@ class Xogo extends Behaviour {
         /* Ordeamos as posicións en caso de empate a puntos según o marcador total */
         for (int posicion1 = 0; posicion1 < clasificacion.size(); posicion1++){
             for (int posicion2 = posicion1 + 1; posicion2 < clasificacion.size(); posicion2++)
-                if (clasificacion.get(posicion1).puntuacion == clasificacion.get(posicion2).puntuacion) {
-                    if(clasificacion.get(posicion1).marcadorTotal < clasificacion.get(posicion2).marcadorTotal) {
+                if (clasificacion.get(posicion1).marcadorTotal == clasificacion.get(posicion2).marcadorTotal) {
+                    if(clasificacion.get(posicion1).puntuacion < clasificacion.get(posicion2).puntuacion) {
                         clasificacion.set(posicion2, clasificacionAux.get(posicion1));
                         clasificacion.set(posicion1, clasificacionAux.get(posicion2));
                         clasificacionAux.set(posicion2, clasificacion.get(posicion2));
@@ -576,9 +582,9 @@ class ParametrosDoXogo {
 
     public ParametrosDoXogo() {
         N = 2;
-        S = 4;
-        R = 50;
-        I = 3;
+        S = 5;
+        R = 1000;
+        I = 0;
         P = 50;
     }
 

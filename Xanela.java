@@ -23,6 +23,10 @@ public class Xanela extends JFrame
     private JButton botonPuasa = new JButton("PAUSAR");
     private JButton botonContinuar = new JButton("CONTINUAR");
 
+    /* Labels */
+    private JLabel labelRondas = new JLabel();
+    private JLabel labelPorcentaxe = new JLabel();
+
     public Xanela(MainAgent meuAxente) {
         setTitle("Práctica B");
         this.meuAxente = meuAxente;
@@ -44,6 +48,7 @@ public class Xanela extends JFrame
         crearBotonNovoXogo();
         crearBotonPausa();
         crearBotonContinuar();
+        crearLabels();
 
     }
 
@@ -118,7 +123,7 @@ public class Xanela extends JFrame
         this.panelMatriz.setFont(fonte);
         this.panelMatriz.setBackground(new Color(255, 255, 255));
         this.panelMatriz.setEditable(false); // Evitamos que se poda escribir no panel
-        this.scrollMatriz.setBounds(740, 100, 489, 410);
+        this.scrollMatriz.setBounds(680, 100, 589, 460);
         add(this.scrollMatriz);
     }
 
@@ -132,7 +137,7 @@ public class Xanela extends JFrame
         this.panelInformacion.setFont(fonte);
         this.panelInformacion.setBackground(new Color(255, 255, 255));
         this.panelInformacion.setEditable(false); // Evitamos que se poda escribir no panel
-        this.scrollInformacion.setBounds(0, 100, 489, 410);
+        this.scrollInformacion.setBounds(50, 100, 489, 460);
         add(this.scrollInformacion);
     }
 
@@ -145,7 +150,7 @@ public class Xanela extends JFrame
         this.panelClasificacion.setFont(fonte);
         this.panelClasificacion.setBackground(new Color(255, 255, 255));
         this.panelClasificacion.setEditable(false); // Evitamos que se poda escribir no panel
-        this.scrollClasificacion.setBounds(1433, 100, 489, 410);
+        this.scrollClasificacion.setBounds(1383, 100, 489, 460);
         add(this.scrollClasificacion);
     }
 
@@ -190,6 +195,21 @@ public class Xanela extends JFrame
         this.botonContinuar.addActionListener( (ActionEvent e) -> { // Engadimos a resposta do boton "Novo xogo"
             this.meuAxente.setPausar(false);
         });
+    }
+
+    public void crearLabels() {
+        this.labelRondas.setBounds(670, 620, 320, 30);
+        this.labelPorcentaxe.setBounds(670, 665, 320, 30);
+        add(this.labelRondas);
+        add(this.labelPorcentaxe);
+    }
+
+    public void imprimirRonda(int ronda, int rondas) {
+        this.labelRondas.setText("Ronda: " + ronda + "/" + rondas);
+    }
+
+    public void imprimirPorcentaxe(int porcentaxe) {
+        this.labelPorcentaxe.setText("Porcentaxe de cambio da matríz: " + porcentaxe + "%");
     }
 
     private class PopupXogadores extends JDialog {
