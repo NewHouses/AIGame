@@ -196,10 +196,13 @@ public class Intel  extends Agent {
                 eleccion = rand.nextInt(tamanhoMatriz);
                 vectorVictorias = new int[tamanhoMatriz];
                 vectorPuntos = new int[tamanhoMatriz];
+                System.out.println("\n\neleccion primer random: " + eleccion );
 
-                estratexiaFixo();
+                estratexia();
                 anteriorEleccion = eleccion;
                 //Enviamos a mensaxe coa resposta
+                System.out.println("\n\neleccion Finale: " + eleccion );
+
                 if(elexirFilas) System.out.println("[Sergio Simons]: " + getLocalName() + " --> Enviando fila...");
                 else System.out.println("[Sergio Simons]: " + getLocalName() + " --> Enviando columna...");
                 ACLMessage resposta = new ACLMessage(ACLMessage.INFORM);
@@ -211,8 +214,9 @@ public class Intel  extends Agent {
                 block();
         }
 
-        private void estratexiaFixo() {
+        private void estratexia() {
             Random rand = new Random();
+            System.out.println("Tamaño matriz: " + tamanhoMatriz);
             for (int fila = 0; fila < tamanhoMatriz; fila++) {
                 for (int columna = 0; columna < tamanhoMatriz; columna++) {
                     if (elexirFilas) vectorPuntos[fila] += matrizPuntos[fila][columna];
@@ -222,19 +226,19 @@ public class Intel  extends Agent {
                         if (elexirFilas) vectorVictorias[fila]++;
                         else vectorVictorias[columna]++;
                     }
-
-                    System.out.print(matriz[fila][columna] + " | ");
                 }
-                System.out.println("\n");
             }
 
             int maximo = vectorVictorias[0];
             int segundoMaximo = -1;
+            System.out.println("vectorVictorias: " + vectorVictorias.length);
             for (int i = 0; i < vectorVictorias.length; i++) {
+                System.out.println("\n\nColumna Victorias: " + vectorVictorias[i] );
                 if (vectorVictorias[i] > maximo) {
                     maximo = vectorVictorias[i];
                     eleccionMaisVictorias = i;
                     eleccion = i;
+                    System.out.println("\n\neleccion Victorias: " + eleccion );
                     if (maximo == tamanhoMatriz) { // Se sempre gañamos en todas as celdas da fila a collemos sempre
                         return;
                     }
@@ -245,6 +249,8 @@ public class Intel  extends Agent {
                 int eleccionProbabilidade = elexirPorProbabilidade();
                 if (eleccionProbabilidade != -1) {
                     eleccion = eleccionProbabilidade;
+                    System.out.println("\n\neleccion probabilidade: " + eleccion );
+
                     return;
                 }
             }
@@ -264,6 +270,9 @@ public class Intel  extends Agent {
                     eleccionMaisPuntos = i;
                 }
             }
+
+
+            System.out.println("vectorPuntos: " + vectorPuntos.length);
             for (int i = 0; i < vectorPuntos.length; i++) {
                 if (vectorPuntos[i] > segundoMaximoPuntos && vectorPuntos[i] < maximoPuntos) {
                     segundoMaximoPuntos = vectorPuntos[i];
@@ -273,15 +282,23 @@ public class Intel  extends Agent {
 
             for (int selec = 0; selec < tamanhoMatriz; selec++) {
                 if(elexirFilas) if(matriz[eleccionMaisVictorias][selec] == Victoria && probabilidades[selec] >= 30) eleccion = eleccionMaisVictorias;
-                else if(matriz[selec][eleccionMaisVictorias] == Victoria && probabilidades[selec] >= 30) eleccion = eleccionMaisVictorias;
+                else if(matriz[selec][eleccionMaisVictorias] == Victoria && probabilidades[selec] >= 30) { eleccion = eleccionMaisVictorias;
+                    System.out.println("\n\neleccion Victorias e probabilidade: " + eleccion );
+
+                }
             }
+
 
             if(eleccionMaisPuntos == eleccionMaisVictorias) {
                 eleccion = eleccionMaisVictorias;
                 for (int selec = 0; selec < tamanhoMatriz; selec++) {
                     if(elexirFilas) if(matriz[eleccion][selec] == Derrota && anteriorEleccionRival == selec) eleccion = segundaEleccionMaisVictorias;
-                    else if(matriz[selec][eleccion] == Derrota && anteriorEleccionRival == selec) eleccion = segundaEleccionMaisVictorias;
+                    else if(matriz[selec][eleccion] == Derrota && anteriorEleccionRival == selec){ eleccion = segundaEleccionMaisVictorias;
+                        System.out.println("\n\neleccion segundaVictorias se perdeu na anterior: " + eleccion );
+                    }
                 }
+                System.out.println("\n\neleccion Victorias e puntos: " + eleccion );
+
                 return;
             }
 
@@ -291,6 +308,8 @@ public class Intel  extends Agent {
                     if(elexirFilas) if(matriz[eleccion][selec] == Derrota && anteriorEleccionRival == selec) eleccion = eleccionMaisVictorias;
                     else if(matriz[selec][eleccion] == Derrota && anteriorEleccionRival == selec) eleccion = eleccionMaisVictorias;
                 }
+                System.out.println("\n\neleccion segundaVictorias e puntos: " + eleccion );
+
                 return;
             }
 
@@ -301,6 +320,8 @@ public class Intel  extends Agent {
                     if(elexirFilas) if(matriz[eleccion][selec] == Derrota && anteriorEleccionRival == selec) eleccion = segundaEleccionMaisVictorias;
                     else if(matriz[selec][eleccion] == Derrota && anteriorEleccionRival == selec) eleccion = segundaEleccionMaisVictorias;
                 }
+                System.out.println("\n\neleccion Victorias e segundo puntos: " + eleccion );
+
             }
 
             if(segundaEleccionMaisPuntos == segundaEleccionMaisVictorias) {
@@ -309,9 +330,13 @@ public class Intel  extends Agent {
                     if(elexirFilas) if(matriz[eleccion][selec] == Derrota && anteriorEleccionRival == selec) eleccion = eleccionMaisVictorias;
                     else if(matriz[selec][eleccion] == Derrota && anteriorEleccionRival == selec) eleccion = eleccionMaisVictorias;
                 }
+                System.out.println("\n\neleccion segundaVictorias e segunda puntos: " + eleccion );
+
             }
 
-            if(!elexirAnterior && eleccion == anteriorEleccion) eleccion = rand.nextInt(tamanhoMatriz);
+            if(!elexirAnterior && eleccion == anteriorEleccion) {eleccion = rand.nextInt(tamanhoMatriz);
+                System.out.println("\n\neleccion random: " + eleccion );
+            }
 
 
 
@@ -322,7 +347,6 @@ public class Intel  extends Agent {
         int celdaMaxPuntos = -10;
         int eleccionCeldaMaxPuntos = -1;
         for (int selec = 0; selec < tamanhoMatriz; selec++) {
-            System.out.print(probabilidades[selec] + " ");
             if (probabilidades[selec] >= 45) {
                 if (elexirFilas) {
                     for (int i = 0; i < tamanhoMatriz; i++) {
@@ -364,8 +388,6 @@ public class Intel  extends Agent {
                 return eleccionCeldaMaxPuntos;
             }
         }
-
-        System.out.println("\n");
         return eleccionCeldaMaxPuntos;
     }
 }

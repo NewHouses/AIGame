@@ -10,6 +10,7 @@ import java.util.*;
 
 public class MainAgent extends Agent {
     Xanela minhaXanela = new Xanela(this);
+    private ParametrosDoXogo parametros = new ParametrosDoXogo();
     private boolean pausar = false;
     private boolean verboseMode = false;
     private int velocidade = 0;
@@ -73,9 +74,13 @@ public class MainAgent extends Agent {
         }
         else
         {
-            Xogo meuXogo = new Xogo(this, xogadores);
+            Xogo meuXogo = new Xogo(this, xogadores, parametros);
             addBehaviour(meuXogo); // Engadimos o comportamento do noso axente principal
         }
+    }
+
+    public ParametrosDoXogo getParametros() {
+        return parametros;
     }
 
     public void setPausar(boolean pausar) {
@@ -107,13 +112,14 @@ class Xogo extends Behaviour {
     private MainAgent axentePrincipal;
     private ArrayList<Xogador> xogadores;
     private String[][] matriz;
-    private ParametrosDoXogo parametros = new ParametrosDoXogo();
+    private ParametrosDoXogo parametros;
     private TreeMap<Integer, Xogador> clasificacion;
 
 
-    public Xogo(MainAgent axentePrincipal, ArrayList<Xogador> xogadores) {
+    public Xogo(MainAgent axentePrincipal, ArrayList<Xogador> xogadores, ParametrosDoXogo parametros) {
         this.axentePrincipal = axentePrincipal;
         this.xogadores = xogadores;
+        this.parametros = parametros;
         parametros.setNumeroXogadores(xogadores.size());
     }
 

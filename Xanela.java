@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class Xanela extends JFrame
 {
     private MainAgent meuAxente;
+    private int tamanhoMatriz = 5, rondasPartidaTotal = 10000, rondasCambio = 100, porcentaxeCambio = 25;
 
     /* Paneis de texto */
     private JTextArea panelMatriz = new JTextArea();
@@ -112,6 +113,23 @@ public class Xanela extends JFrame
 
         opcions.add(velocidade);
 
+        JMenuItem sobre = new JMenuItem("Sobre");
+        axuda.add(sobre);
+
+        sobre.addActionListener( (ActionEvent e) -> {
+            JOptionPane.showMessageDialog(this, "Nome: Sergio Simons Casasnovas\nDNI: 39486927K\nConta laboratorio: psi?", "Informaci\u00f3n sobre o creador", JOptionPane.INFORMATION_MESSAGE, null);
+        });
+
+        //Creamos os items do menu execucion e os anhadimos o menu despregabre
+        JMenuItem configuracion = new JMenuItem("Configuraci\u00f3n");
+        opcions.add(configuracion);
+
+
+        //Creamos a xanela de configuracion
+        configuracion.addActionListener( (ActionEvent e) -> {
+            new xanelaConfiguracion();
+        });
+
         barraMenu.add(opcions);
         barraMenu.add(Box.createHorizontalGlue()); // Pomos o boton axuda a dereita
         barraMenu.add(axuda);
@@ -119,7 +137,7 @@ public class Xanela extends JFrame
     }
 
     public void crearPanelMatriz() {
-        Font fonte = new Font("Dialog", Font.BOLD, 29);
+        Font fonte = new Font("Dialog", Font.BOLD, 20);
         this.panelMatriz.setFont(fonte);
         this.panelMatriz.setBackground(new Color(255, 255, 255));
         this.panelMatriz.setEditable(false); // Evitamos que se poda escribir no panel
@@ -258,6 +276,10 @@ public class Xanela extends JFrame
             add(this.botonAceptar);
             this.botonAceptar.addActionListener( (ActionEvent e) -> { // Engadimos a resposta do boton "Novo xogo"
                 obterXogadoresElexidos();
+                this.meuAxente.getParametros().setTamanhoMatriz(tamanhoMatriz);
+                this.meuAxente.getParametros().setNumeroRondas(rondasPartidaTotal);
+                this.meuAxente.getParametros().setIteracionsCambioMatriz(rondasCambio);
+                this.meuAxente.getParametros().setPorcentaxeCambioMatriz(porcentaxeCambio);
                 this.meuAxente.iniciarXogo(xogadoresElexidos);
                 dispose();
             });
@@ -266,6 +288,106 @@ public class Xanela extends JFrame
         private void obterXogadoresElexidos() {
             for (int i = 0; i < this.checkBoxes.length; i++)
                 if (this.checkBoxes[i].isSelected()) xogadoresElexidos.add(xogadores.get(i));
+        }
+    }
+
+    /**
+     * Clase que conten a xanela de configuracion
+     */
+    private class xanelaConfiguracion extends JDialog
+    {
+        //Etiquetas e lista
+        private JLabel labelTamanoMatriz = new JLabel("Tamaño da matríz");
+        private JLabel labelNumeroRondas = new JLabel("Número de rondas dunha partida");
+        private JLabel labelRondasCambio = new JLabel("Número de rondas para cambiala matríz (0 para non cambiala)");
+        private JLabel labelPorcentaxe = new JLabel("Porcentaxe de cambio da matriz");
+        private ArrayList<JLabel> labels = new ArrayList<>();
+
+        //Textos e lista
+        private JTextArea areaTamanoMatriz = new JTextArea(String.valueOf(tamanhoMatriz));
+        private JTextArea areaNumeroRondas = new JTextArea(String.valueOf(rondasPartidaTotal));
+        private JTextArea areaRondasCambio = new JTextArea(String.valueOf(rondasCambio));
+        private JTextArea areaPorcentaxe = new JTextArea(String.valueOf(porcentaxeCambio));
+        private ArrayList<JTextArea> textAreas = new ArrayList<>();
+
+        //Botons
+        private JButton botonAceptar = new JButton("Aceptar");
+        private JButton botonCancelar = new JButton("Cancelar");
+        private ArrayList<JButton> botons = new ArrayList<>();
+
+        public xanelaConfiguracion()
+        {
+            //Anhadimos os elementos na lista correspondente
+            this.labels.add(this.labelTamanoMatriz);
+            this.labels.add(this.labelNumeroRondas);
+            this.labels.add(this.labelRondasCambio);
+            this.labels.add(this.labelPorcentaxe);
+
+            this.textAreas.add(this.areaTamanoMatriz);
+            this.textAreas.add(this.areaNumeroRondas);
+            this.textAreas.add(this.areaRondasCambio);
+            this.textAreas.add(this.areaPorcentaxe);
+
+            this.botons.add(this.botonAceptar);
+            this.botons.add(this.botonCancelar);
+
+            crearLayout();
+
+            //Comprobamos e gardamos os datos, posteriormente, pechamos a xanela
+            botonAceptar.addActionListener( (ActionEvent e) -> {
+                try
+                {
+                    tamanhoMatriz = Integer.parseInt(this.areaTamanoMatriz.getText());
+                    rondasPartidaTotal = Integer.parseInt(this.areaNumeroRondas.getText());
+                    rondasCambio = Integer.parseInt(this.areaRondasCambio.getText());
+                    porcentaxeCambio = Integer.parseInt(this.areaPorcentaxe.getText());
+                    JOptionPane.showMessageDialog(null, "Os datos actualizaranse cando pulse \"Novo Xogo\"", "Actualización", JOptionPane.INFORMATION_MESSAGE, null);
+                    dispose();
+                }
+                catch (Exception exception)
+                {
+                    JOptionPane.showMessageDialog(null, "Por favor, introduza ben os datos", "Erro", JOptionPane.INFORMATION_MESSAGE, null);
+                }
+            });
+
+            //Pechamos a xanela
+            botonCancelar.addActionListener( (ActionEvent e) -> {
+                dispose();
+            });
+
+            setSize(600, 200);
+            setResizable(false);
+            setLocationRelativeTo(null);
+            getContentPane().setBackground(new Color(25, 178, 172));
+            setVisible(true);
+        }
+
+        /**
+         * Colocamos e anhadimos os elementos
+         */
+        private void crearLayout ()
+        {
+            setLayout(null);
+
+            this.labelTamanoMatriz.setBounds(10, 10, 400, 30);
+            this.labelNumeroRondas.setBounds(10, 40, 400, 30);
+            this.labelRondasCambio.setBounds(10, 70, 400, 30);
+            this.labelPorcentaxe.setBounds(10, 100, 400, 30);
+
+            this.areaTamanoMatriz.setBounds(410, 15, 180, 20);
+            this.areaNumeroRondas.setBounds(410, 45, 180, 20);
+            this.areaRondasCambio.setBounds(410, 75, 180, 20);
+            this.areaPorcentaxe.setBounds(410, 105, 180, 20);
+
+            this.botonAceptar.setBounds(125, 135, 150, 30);
+            this.botonCancelar.setBounds(350, 135, 150, 30);
+
+            for (JLabel label : this.labels)
+                add(label);
+            for (JTextArea text : this.textAreas)
+                add(text);
+            for (JButton boton : this.botons)
+                add(boton);
         }
     }
 }
